@@ -57,7 +57,7 @@ function parseLine(line) {
 function createHTMLflokkur(name,questions) {
   const MAX_QUESTION = 100;
   const path =  `./dist/${name}.html`;
-  let html = `
+  let mid_html = `
   
   `;
 
@@ -68,18 +68,42 @@ function createHTMLflokkur(name,questions) {
     } 
     const q_html = `
       <div class="quiz-question">
-        <p>
-          <strong>${question.categoryNumber} (${question.difficulty}):</strong>
-          ${question.question}
-        </p>
-        <input type="text" class="answer-input" placeholder="Svar" data-correct="${question.answer}">
-        <button class="submit-answer">Senda</button>
-        <span class="feedback"></span>
+        <li>
+          <p>
+            <strong>${question.categoryNumber} (${question.difficulty}):</strong>
+            ${question.question}
+          </p>
+          <input type="text" class="answer-input" placeholder="Svar" data-correct="${question.answer}">
+          <button class="submit-answer">Senda</button>
+          <span class="feedback"></span>
+        <li>
       </div>
     `;
-    html += q_html;
+    mid_html += q_html;
     cnt += 1
   }
+
+  const top_html = `
+    <!DOCTYPE html>
+    <html lang="is">
+    <head>
+      <meta charset="UTF-8">
+      <title>Quiz Categories</title>
+      <link rel="stylesheet" href="./styles.css">
+    </head>
+    <body>
+      <h1>Questions</h1>
+      <ul>   
+  `;
+
+  const bot_html = `
+      </ul>   
+      <script src="scripts.js"></script>
+    </body>
+    </html>
+  `;
+
+  const html = top_html + mid_html + bot_html
   fs.writeFile(path,html,'utf-8');
 }
 
@@ -88,23 +112,27 @@ function createHTMLindex(links) {
     <!DOCTYPE html>
     <html lang="is">
     <head>
-        
+      <meta charset="UTF-8">
+      <title>Quiz Categories</title>
+      <link rel="stylesheet" href="./styles.css">
     </head>
-    <body>    
+    <body>
+      <h1>Quiz Categories</h1>
+      <ul>   
   `;
 
   let mid_html = `
-  
   `;
 
   let bot_html = `
+      </ul>
     </body>
     </html>
   `;
 
   for (const link of links) {
     const link_html = `
-      <p><a href="${link}.html">${link}</a></p>
+        <li><a href="${link}.html">${link}</a></li>
     `;
     mid_html += link_html;
   }
@@ -116,6 +144,9 @@ function createHTMLindex(links) {
 }
 
 async function main() {
+  const distPath = './dist';
+  await fs.mkdir(distPath);
+
   const content = await fs.readFile('./questions.csv','utf-8');
 
   const lines = content.split("\n");
@@ -147,7 +178,6 @@ async function main() {
     'hardGeography',
     'easyEntertainment',
     'mediumSports'])
-
 }
 
 main().catch((error) => {
