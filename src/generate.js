@@ -1,5 +1,153 @@
+import fs from 'node:fs/promises'
+
+function parseLine(line) {
+  
+  /* Fylki til að flokka categories, difficulty og quality*/
+  const catName = [
+    'Almenn kunnátta', 
+    'Náttúra og vísindi',
+    'Bókmenntir og listir', 
+    'Saga', 
+    'Landafræði', 
+    'Skemmtun og afþreying', 
+    'Íþróttir og tómstundir'
+  ];
+
+  const difficultyCategory = [
+    'Létt',
+    'Meðal',
+    'Erfið'
+  ];
+
+  const qualityCategory = [
+    'Slöpp',
+    'Góð',
+    'Ágæt'
+  ];
+
+  /* Býr til object */
+  const split = line.split(",");
+    
+    const categoryNumber = catName[parseInt(split[0])-1];
+    const subCategory = split[1];
+    const difficulty = difficultyCategory[parseInt(split[2])-1];
+    const quality = qualityCategory[parseInt(split[3])-1];
+    const question = split[4];
+    const answer = split[5];
+
+    const q = {
+      categoryNumber,
+      subCategory,
+      difficulty,
+      quality,
+      question,
+      answer
+    };
+
+    if (
+      Object.keys(split).length === 6 
+      && typeof q.question === "string"
+      && typeof q.answer === "string"
+    ) {return q} else {
+      return null
+    };
+
+}
+
+function createHTMLflokkur(name,questions) {
+  const MAX_QUESTION = 100;
+  const path =  `./dist/${name}.html`;
+  let html = `
+  
+  `;
+
+  let cnt = 0;
+  for (const question of questions) {
+    if (cnt >= MAX_QUESTION) {
+      break;
+    } 
+    const q_html = `
+      <div class="quiz-question">
+        <p>
+          <strong>${question.categoryNumber} (${question.difficulty}):</strong>
+          ${question.question}
+        </p>
+        <input type="text" class="answer-input" placeholder="Svar" data-correct="${question.answer}">
+        <button class="submit-answer">Senda</button>
+        <span class="feedback"></span>
+      </div>
+    `;
+    html += q_html;
+    cnt += 1
+  }
+  fs.writeFile(path,html,'utf-8');
+}
+
+function createHTMLindex(links) {
+  const top_html = `
+    <!DOCTYPE html>
+    <html lang="is">
+    <head>
+        
+    </head>
+    <body>    
+  `;
+
+  let mid_html = `
+  
+  `;
+
+  let bot_html = `
+    </body>
+    </html>
+  `;
+
+  for (const link of links) {
+    const link_html = `
+      <p><a href="${link}.html">${link}</a></p>
+    `;
+    mid_html += link_html;
+  }
+
+  const html = top_html + mid_html + bot_html
+  const path = './dist/index.html';
+
+  fs.writeFile(path,html,'utf-8');
+}
+
 async function main() {
-  console.log('generating...');
+  const content = await fs.readFile('./questions.csv','utf-8');
+
+  const lines = content.split("\n");
+
+  const questions = lines.map(parseLine).filter(Boolean);
+
+  /** Búa til html síður fyrir flokka */
+
+  const highQualityHistory = questions.filter(q => q.categoryNumber === 'Saga' && q.quality === 'Ágæt');
+  const goodQualityGeneral = questions.filter(q => q.categoryNumber === 'Almenn kunnátta' && q.quality === 'Góð');
+  const poorQualityCulture = questions.filter(q => q.categoryNumber === 'Bókmenntir og listir' && q.quality === 'Slöpp');
+  const hardGeography = questions.filter(q => q.categoryNumber === 'Landafræði' && q.difficulty === 'Erfið');
+  const easyEntertainment = questions.filter(q => q.categoryNumber === 'Skemmtun og afþreying' && q.difficulty === 'Létt');
+  const mediumSports = questions.filter(q => q.categoryNumber === 'Íþróttir og tómstundir' && q.difficulty === 'Meðal');
+
+  createHTMLflokkur("highQualityHistory",highQualityHistory);
+  createHTMLflokkur("goodQualityGeneral",goodQualityGeneral);
+  createHTMLflokkur("poorQualityCulture",poorQualityCulture);
+  createHTMLflokkur("hardGeography",hardGeography);
+  createHTMLflokkur("easyEntertainment",easyEntertainment);
+  createHTMLflokkur("mediumSports",mediumSports);
+
+  /** Búa til index með linkum */
+
+  createHTMLindex([
+    'highQualityHistory',
+    'goodQualityGeneral',
+    'poorQualityCulture',
+    'hardGeography',
+    'easyEntertainment',
+    'mediumSports'])
+
 }
 
 main().catch((error) => {
