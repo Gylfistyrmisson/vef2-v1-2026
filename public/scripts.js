@@ -1,3 +1,5 @@
+/** Notaði AI til að generatea mikið af þessum kóða */
+
 document.addEventListener('DOMContentLoaded', function() {
   const quizQuestions = document.querySelectorAll('.quiz-question');
 
